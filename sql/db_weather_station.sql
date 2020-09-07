@@ -10,6 +10,7 @@ use db_weather_station;
 CREATE TABLE `tbl_counties` (
   `Cos_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
   `Cos_name` varchar(100) NOT NULL,
+  `Cos_img` varchar(100) NOT NULL,
   PRIMARY KEY (`Cos_id`)
 )ENGINE=InnoDB;
 
@@ -19,30 +20,30 @@ CREATE TABLE `tbl_counties` (
 -- 新增縣市(tbl_category)資料表記錄
 --
 
-INSERT INTO `tbl_counties` (`Cos_name`)
+INSERT INTO `tbl_counties` (`Cos_name`, `Cos_img`)
 VALUES
-('雲林縣'),
-('南投縣'),
-('連江縣'),
-('臺東縣'),
-('金門縣'),
-('宜蘭縣'),
-('屏東縣'),
-('苗栗縣'),
-('澎湖縣'),
-('臺北市'),
-('新竹縣'),
-('花蓮縣'),
-('高雄市'),
-('彰化縣'),
-('新竹市'),
-('新北市'),
-('基隆市'),
-('臺中市'),
-('臺南市'),
-('桃園市'),
-('嘉義縣'),
-('嘉義市');
+('雲林縣', 'img/yunlin.jpg'),
+('南投縣', 'img/nantou.jpg'),
+('連江縣', 'img/lianjiang.jpg'),
+('臺東縣', 'img/taitung.jpg'),
+('金門縣', 'img/kinmen.jpg'),
+('宜蘭縣', 'img/yilan.jpg'),
+('屏東縣', 'img/pingtung.jpg'),
+('苗栗縣', 'img/miaoli.jpg'),
+('澎湖縣', 'img/penghu.jpg'),
+('臺北市', 'img/taipei.jpg'),
+('新竹縣', 'img/hsinchu.jpg'),
+('花蓮縣', 'img/hualien.jpg'),
+('高雄市', 'img/Kaohsiung.jpg'),
+('彰化縣', 'img/changhua.jpg'),
+('新竹市', 'img/hsinchucity.jpg'),
+('新北市', 'img/newtaipei.jpg'),
+('基隆市', 'img/keelung.jpg'),
+('臺中市', 'img/taichung.jpg'),
+('臺南市', 'img/tainan.jpg'),
+('桃園市', 'img/taoyuan.jpg'),
+('嘉義縣', 'img/chiayi.jpg'),
+('嘉義市', 'img/chiayicity.jpg');
 
 
 --
@@ -460,6 +461,7 @@ CREATE TABLE `tbl_3_days_forecast` (
     `WeatherDescription` varchar(150) NOT NULL,
     `WS` varchar(10) NOT NULL,
     `WD` varchar(15) NOT NULL,
+    `Wx` varchar(50) NOT NULL,
     `startTime` varchar(30) NOT NULL,
     `endTime` varchar(30) NOT NULL,
     PRIMARY KEY (`3_days_id`),
@@ -477,6 +479,7 @@ CREATE TABLE `tbl_current_weather` (
     `Cos_id` int(11) UNSIGNED NOT NULL,
     `twn_id` int(11) UNSIGNED NOT NULL,
     `location_name` varchar(50) NOT NULL,
+    `obsTime` varchar(20) NOT NULL,
     `ELEV` varchar(10) NOT NULL,
     `WDIR` varchar(10) NOT NULL,
     `WDSD` varchar(10) NOT NULL,
@@ -535,11 +538,37 @@ while($row = mysqli_fetch_assoc($result)){
 }
 
 
+          <?php $time ="";
+          $ForecastStartTime = strtotime(substr_replace (date("Y-m-d H:i:s",strtotime("+1 day")+ 3600 * 8),"00:00:00", 11));
+          $ForecastEndTime = strtotime(substr_replace (date("Y-m-d H:i:s",strtotime("+3 day")+ 3600 * 8),"00:00:00", 11));
+          while ($row = mysqli_fetch_assoc($result)){
+          if(strtotime($row["startTime"]) >= $ForecastStartTime && strtotime($row["startTime"]) < $ForecastEndTime){
+            $weekday = get_chinese_weekday($row["startTime"]);
+            $startTime = substr($row["startTime"],11,14);
+            $endTime = substr($row["endTime"],11,14);
+            $date = strtr(substr($row["startTime"],5,5),"-","/").'<br/><h6 >'."$weekday".'</h6>'."{$startTime}<br/>".'~<br/>'."{$endTime}";
+            $time = $time.'<th scope="col">'."{$date}".'</th>';
+          }
+       }
+       echo $time;
+       mysqli_data_seek($result,0);
+       exit();
+      ?>
 
 
 
 
-
+  $townList = file_get_contents("./selCounty.php?county={$_POST["selCounties"]}");
+  echo"$townList"."22";
+  $curl_handle=curl_init();
+  curl_setopt($ch, CURLOPT_URL,"selCounty.php");
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+  curl_setopt($ch, CURLOPT_HEADER, 0);
+  curl_setopt($get, CURLOPT_FOLLOWLOCATION, true);
+  curl_setopt($ch, CURLOPT_POSTFIELDS, "county={$_POST["selCounties"]}");
+  $query = curl_exec($ch);
+  curl_close($ch);
+  echo "$query";
 
 
 

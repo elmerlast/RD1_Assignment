@@ -2,9 +2,8 @@
 require_once "./sql/onnDB.php";
 require_once "./storage.php";
 
-insert_7_days_forecast();
 
-
+insert_3_days_forecast();
 
 
 
@@ -15,20 +14,20 @@ $countiesResult = mysqli_query($link, $sqlStatement);
 
 if (isset($_POST["selCounties"])) {
   $sqlStatement = <<<mulity
-  select 7_days_id , Cos_id , T, MinT, MaxT, PoP12h, WS, WD, Wx, RH, startTime, endTime
-  from tbl_7_days_forecast
+  select 3_days_id , Cos_id , T, AT, RH, PoP6h, WS, WD, Wx, startTime, endTime
+  from tbl_3_days_forecast
   where Cos_id = {$_POST["selCounties"]}
-  ORDER BY `tbl_7_days_forecast`.`7_days_id` ASC;
+  ORDER BY `tbl_3_days_forecast`.`3_days_id` ASC;
   mulity;
   $result = mysqli_query($link, $sqlStatement);
 
 }else{
   $_POST["selCounties"] = 10;
   $sqlStatement = <<<mulity
-  select 7_days_id , Cos_id , T, MinT, MaxT, PoP12h, WS, WD, Wx, RH, startTime, endTime
-  from tbl_7_days_forecast
+  select 3_days_id , Cos_id , T, AT, RH, PoP6h, WS, WD, Wx, startTime, endTime
+  from tbl_3_days_forecast
   where Cos_id = 10
-  ORDER BY `tbl_7_days_forecast`.`7_days_id` ASC;
+  ORDER BY `tbl_3_days_forecast`.`3_days_id` ASC;
   mulity;
   $result = mysqli_query($link, $sqlStatement);
 }
@@ -55,13 +54,15 @@ if (isset($_POST["selCounties"])) {
   <link rel="stylesheet" href="\PID_Assignment\css\store_index.css">
   <script src="\PID_Assignment\js\jquery.min.js"></script>
   <script src="\PID_Assignment\js\bootstrap.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <script src="\PID_Assignment\js\jquery.mycart.js"></script>
 
 </head>
 
 <body>
 
 
-  <nav class="navbar navbar-expand-sm navbar-light sticky-top" style="background-color: #e3f2fd;">
+<nav class="navbar navbar-expand-sm navbar-light sticky-top" style="background-color: #e3f2fd;">
     <div class="navbar-brand">個人氣象站</div>
     <li style="list-style-type:none" class="nav-item dropdown">
         <div class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -78,7 +79,7 @@ if (isset($_POST["selCounties"])) {
 
 
   <div class="container">
-    <h1 style="text-align:center;">縣市未來一週天氣預報</h1>
+    <h1 style="text-align:center;">各縣市未來2天天氣預報</h1>
     <form method="post" action="">
       <div class="row">
           <div class="col-2">
@@ -100,7 +101,7 @@ if (isset($_POST["selCounties"])) {
       </div>
     </form>
 
-          <form class="form-inline pull-left" role="form" id="form_7_days" name="form_7_days" action = "index.php" method="POST" >
+            <form class="form-inline pull-left" role="form" id="form_7_days" name="form_7_days" action = "index.php" method="POST" >
              <?php if (isset($_POST["selCounties"])) {?>
               <input type="submit" class="btn btn-link" id="selCounties" name="selCounties" value="未來一週天氣預報">
               <input type="hidden" id="selCounties" name="selCounties" value="<?= $_POST["selCounties"] ?>"/>
@@ -116,7 +117,7 @@ if (isset($_POST["selCounties"])) {
              <?php }else{ ?>
               <input type="submit" class="btn btn-link" id="selCounties" name="selCounties">
              <?php } ?>
-            </form>
+		        </form>
 
         </div>
 
@@ -128,73 +129,75 @@ if (isset($_POST["selCounties"])) {
       <thead class="thead-light">
         <tr style="text-align:center;">
           <th scope="col">時間</th>
-          <?php $time ="";
-       while ($row = mysqli_fetch_assoc($result)){
-
-          if(fmod($row["7_days_id"],2)==1){
-            $weekday = get_chinese_weekday($row["startTime"]);
-            $date = strtr(substr($row["startTime"],5,5),"-","/").'<br/><h6 >'."$weekday".'</h6>';
-            $time = $time.'<th scope="col">'."{$date}".'</th>';
-          }
-       }
-       echo $time;
-       mysqli_data_seek($result,0);
-      ?>
+          <th scope="col">00時~03時</th>
+          <th scope="col">03時~06時</th>
+          <th scope="col">06時~09時</th>
+          <th scope="col">09時~12時</th>
+          <th scope="col">12時~15時</th>
+          <th scope="col">15時~18時</th>
+          <th scope="col">18時~21時</th>
+          <th scope="col">21時~00時</th>
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <th scope="row">白天</th>
-          <?php $dayForecast ="";
-            while ($row = mysqli_fetch_assoc($result)){
-                if($row["PoP12h"] ==" "){
-                  $PoP = "暫無資料";
-                }else{
-                  $PoP = "{$row["PoP12h"]}"."%";
-                }
-                if(fmod($row["7_days_id"],2)==1){
-                   $dayForecast = $dayForecast.
-                   '<td scope="col">'.
-                   "
-                    {$row["MinT"]} - {$row["MaxT"]} °C <br/>
-                    天氣：{$row["Wx"]} <br/>
-                    降雨機率：{$PoP}<br/>
-                    濕度：{$row["RH"]} <br/>
-                    風向：{$row["WD"]} <br/>
-                    風速：{$row["WS"]} <br/>
-                  "
-                  .'</td>';
+      <tr>
+      <?php
+          $ForecastTime = date("Y-m-d H:i:s",strtotime("+1 day")+ 3600 * 8);
+          $weekday = get_chinese_weekday($ForecastTime);
+          $timeth = strtr(substr($ForecastTime,5,5),"-","/").'<br/><h6 >'."$weekday".'</h6>'; ?>
+
+          <th scope="col"><?=$timeth?></th>
+      <?php
+          $dayForecast ="";
+          $ForecastStartTime = strtotime(substr_replace (date("Y-m-d H:i:s",strtotime("+1 day")+ 3600 * 8),"00:00:00", 11));
+          $ForecastEndTime = strtotime(substr_replace (date("Y-m-d H:i:s",strtotime("+2 day")+ 3600 * 8),"00:00:00", 11));          
+          while ($row = mysqli_fetch_assoc($result)){
+            if(strtotime($row["startTime"]) >= $ForecastStartTime && strtotime($row["startTime"]) < $ForecastEndTime){
+              $dayForecast = $dayForecast.
+              '<td scope="col">'.
+              "
+              溫度：{$row["T"]}<br/>
+              天氣：{$row["Wx"]} <br/>
+              降雨機率：{$row["PoP6h"]}%<br/>
+              濕度：{$row["RH"]} <br/>
+              風向：{$row["WD"]} <br/>
+              風速：{$row["WS"]} <br/>
+              "
+              .'</td>';
+            }
           }
-       }
-       echo $dayForecast;
-       mysqli_data_seek($result,0);
+          echo $dayForecast;
+          mysqli_data_seek($result,0);
       ?>
       </tr>
       <tr>
-          <th scope="row">夜晚</th>
-          <?php $dayForecast ="";
-            while ($row = mysqli_fetch_assoc($result)){
-                if($row["PoP12h"] ==" "){
-                  $PoP = "暫無資料";
-                }else{
-                  $PoP = "{$row["PoP12h"]}"."%";
-                }
-                if(fmod($row["7_days_id"],2)==0){
-                   $dayForecast = $dayForecast.
-                   '<td scope="col">'.
-                   "
-                    {$row["MinT"]} - {$row["MaxT"]} °C <br/>
-                    天氣：{$row["Wx"]} <br/>
-                    降雨機率：{$PoP}<br/>
-                    濕度：{$row["RH"]} <br/>
-                    風向：{$row["WD"]} <br/>
-                    風速：{$row["WS"]} <br/>
-                  "
-                  .'</td>';
+      <?php
+          $ForecastTime = date("Y-m-d H:i:s",strtotime("+2 day")+ 3600 * 8);
+          $weekday = get_chinese_weekday($ForecastTime);
+          $timeth = strtr(substr($ForecastTime,5,5),"-","/").'<br/><h6 >'."$weekday".'</h6>'; ?>
+
+          <th scope="col"><?=$timeth?></th>
+      <?php
+          $dayForecast ="";
+          $ForecastStartTime = strtotime(substr_replace (date("Y-m-d H:i:s",strtotime("+2 day")+ 3600 * 8),"00:00:00", 11));
+          $ForecastEndTime = strtotime(substr_replace (date("Y-m-d H:i:s",strtotime("+3 day")+ 3600 * 8),"00:00:00", 11));          
+          while ($row = mysqli_fetch_assoc($result)){
+            if(strtotime($row["startTime"]) >= $ForecastStartTime && strtotime($row["startTime"]) < $ForecastEndTime){
+              $dayForecast = $dayForecast.
+              '<td scope="col">'.
+              "
+              溫度：{$row["T"]}<br/>
+              天氣：{$row["Wx"]} <br/>
+              降雨機率：{$row["PoP6h"]}%<br/>
+              濕度：{$row["RH"]} <br/>
+              風向：{$row["WD"]} <br/>
+              風速：{$row["WS"]} <br/>
+              "
+              .'</td>';
+            }
           }
-       }
-       echo $dayForecast;
-       mysqli_data_seek($result,0);
+          echo $dayForecast;
+          mysqli_data_seek($result,0);
       ?>
       </tr>
       </tbody>
