@@ -11,8 +11,14 @@ while ($row = mysqli_fetch_row($result)) {
 $rows1d = array_column($rows, 0); //二維陣列降為一維陣列
 $arrayCosId = array_flip($rows1d);
 
-//從資料庫抓出鄉鎮資料表，新增一個鄉鎮名稱對照鄉鎮編號的陣列
-$sql = "select twn_name from tbl_towns";
+//從資料庫抓出鄉鎮資料表跟縣市資料表，新增一個縣市鄉鎮名稱對照鄉鎮編號的陣列
+$sql =<<<STMT
+    select CONCAT(c.`Cos_name`,t.`twn_name`) as `twnNAME`
+    from tbl_towns as t
+    inner join tbl_counties as c
+    on t.Cos_id = c.Cos_id  
+    ORDER BY `t`.`twn_id` ASC
+STMT;
 $result = mysqli_query($link, $sql);
 while ($row = mysqli_fetch_row($result)) {
     $twnrows[] = $row;
@@ -170,7 +176,7 @@ function insert_current_weather()
     $result = mysqli_query($link, $sql);
     $nums = mysqli_num_rows($result);
     if ($nums > 0) {
-        // 確認資料庫中的資料是否為最新資料，如果確認的結果式最新資料結束此次函式的呼叫
+        // 確認資料庫中的資料是否為最新資料，如果確認的結果是最新資料結束此次函式的呼叫不刪除資料表紀錄
         $nowTime = strtotime("now")+ 3600 * 8;
         if(isset($_SESSION["currentWeatherUpdateTime"]) && $nowTime < $_SESSION["currentWeatherUpdateTime"]){
             return;
@@ -201,8 +207,8 @@ function insert_current_weather()
         $cityName = $json["records"]["location"][$locationIndex]["parameter"][0]["parameterValue"];
         $Cos_id = $arrayCosId[$cityName] + 1;
 
-        // 透過資料記錄中的鄉鎮名稱獲取鄉鎮的編號
-        $townName = $json["records"]["location"][$locationIndex]["parameter"][2]["parameterValue"];
+        // 透過資料記錄中的縣市鄉鎮名稱獲取鄉鎮的編號
+        $townName = $cityName.$json["records"]["location"][$locationIndex]["parameter"][2]["parameterValue"];
         $twn_id = $arrayTwnId[$townName] + 1;
 
         $weatherElement = $json["records"]["location"][$locationIndex]["weatherElement"];
@@ -225,7 +231,6 @@ function insert_current_weather()
         $sqlStatement = $sqlStatement . "({$Cos_id},{$twn_id},'{$locationName}','{$obsTime}','{$ELEV}','{$WDIR}','{$WDSD}','{$TEMP}','{$HUMD}','{$PRES}','{$H_24R}','{$H_FX}','{$H_XD}','{$H_FXT}','{$H_UVI}','{$D_TX}','{$D_TN}'),";
     }
     $sqlStatement = substr($sqlStatement, 0, -1);
-    // echo "$sqlStatement";
     mysqli_query($link, $sqlStatement) or die("新增失敗");
 
     $url = 'https://opendata.cwb.gov.tw/api/v1/rest/datastore/O-A0001-001?Authorization=CWB-8964077E-C7F6-4914-BC85-C744B782392D';
@@ -244,8 +249,8 @@ function insert_current_weather()
         $cityName = $json["records"]["location"][$locationIndex]["parameter"][0]["parameterValue"];
         $Cos_id = $arrayCosId[$cityName] + 1;
 
-        // 透過資料記錄中的鄉鎮名稱獲取鄉鎮的編號
-        $townName = $json["records"]["location"][$locationIndex]["parameter"][2]["parameterValue"];
+        // 透過資料記錄中的縣市鄉鎮名稱獲取鄉鎮的編號
+        $townName = $cityName.$json["records"]["location"][$locationIndex]["parameter"][2]["parameterValue"];
         $twn_id = $arrayTwnId[$townName] + 1;
 
         $weatherElement = $json["records"]["location"][$locationIndex]["weatherElement"];
@@ -267,7 +272,6 @@ function insert_current_weather()
         $sqlStatement = $sqlStatement . "({$Cos_id},{$twn_id},'{$locationName}','{$obsTime}','{$ELEV}','{$WDIR}','{$WDSD}','{$TEMP}','{$HUMD}','{$PRES}','{$H_24R}','{$H_FX}','{$H_XD}','{$H_FXT}','{$D_TX}','{$D_TN}'),";
     }
     $sqlStatement = substr($sqlStatement, 0, -1);
-    // echo "$sqlStatement";
     mysqli_query($link, $sqlStatement) or die("新增失敗");
 
     $_SESSION["currentWeatherUpdateTime"] = strtotime(substr_replace (date("Y-m-d H:i:s",strtotime("+10 minutes")+ 3600 * 8),"0:00", 15));
@@ -316,8 +320,8 @@ function insert_rainfall_report()
         $cityName = $json["records"]["location"][$locationIndex]["parameter"][0]["parameterValue"];
         $Cos_id = $arrayCosId[$cityName] + 1;
 
-        // 透過資料記錄中的鄉鎮名稱獲取鄉鎮的編號
-        $townName = $json["records"]["location"][$locationIndex]["parameter"][2]["parameterValue"];
+        // 透過資料記錄中的縣市鄉鎮名稱獲取鄉鎮的編號
+        $townName = $cityName.$json["records"]["location"][$locationIndex]["parameter"][2]["parameterValue"];
         $twn_id = $arrayTwnId[$townName] + 1;
 
         $weatherElement = $json["records"]["location"][$locationIndex]["weatherElement"];
@@ -329,7 +333,6 @@ function insert_rainfall_report()
         $sqlStatement = $sqlStatement . "({$Cos_id},{$twn_id},'{$locationName}','{$ELEV}','{$RAIN}','{$HOUR_24}','{$NOW}'),";
     }
     $sqlStatement = substr($sqlStatement, 0, -1);
-    // echo "$sqlStatement";
     mysqli_query($link, $sqlStatement) or die("新增失敗");
     $_SESSION["rainfallUpdateTime"] = strtotime(substr_replace (date("Y-m-d H:i:s",strtotime("+10 minutes")+ 3600 * 8),"0:00", 15));
 
@@ -348,6 +351,14 @@ function iszero($data)
 {
     if($data < 0){
         $data = "0.00";
+    }
+    return $data;
+}
+
+function isdatanull($data)
+{
+    if($data == "-99"){
+        $data = "暫無資料";
     }
     return $data;
 }

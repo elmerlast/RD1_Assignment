@@ -19,7 +19,6 @@ mysqli_data_seek($townsResult,0);
 
 
 
-
 if (isset($_POST["selTown"])) {
   $_POST["selCounties"] = $arraygetCosId[$_POST["selTown"]];
   
@@ -41,8 +40,14 @@ if (isset($_POST["selTown"])) {
   $result = mysqli_query($link, $sqlStatement);
 }
 
+$_SESSION["twnid"] = $_POST["selTown"];
+
+
+
 
 ?>
+
+
 
 
 
@@ -55,8 +60,6 @@ if (isset($_POST["selTown"])) {
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <title>個人氣象站</title>
 
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
-    integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
   <link rel="stylesheet" href="\PID_Assignment\css\bootstrap.min.css">
   <link rel="stylesheet" href="\PID_Assignment\css\store_index.css">
@@ -150,14 +153,10 @@ if (isset($_POST["selTown"])) {
     </table>
   </div>
     
-
-
-
-
-
-
-
 </body>
+
+
+
 <script type="text/javascript">
 
 $(document).ready(init);
@@ -169,7 +168,8 @@ function init() {
 
 function countySelect() {
 	var s = $("#selCounties option:selected").val();
-	$.get('selCounty.php?county=' + s, townListBack)
+  $.get('selCounty.php?county=' + s , townListBack)
+
 }
 
 function townListBack(data) {
@@ -177,5 +177,13 @@ function townListBack(data) {
 }
 
 </script>
+
+
+
+<?php if (isset($_POST["selCounties"])) {  
+  echo "<script type='text/javascript'>
+            countySelect();
+        </script>";
+} ?>
 
 </html>

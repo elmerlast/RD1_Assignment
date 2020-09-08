@@ -527,50 +527,5 @@ CREATE TABLE `tbl_rainfall_report` (
 
 
 
-//檢查欲新增縣市鄉鎮參數是否重複
-$sql = "select c.Cos_name, t.twn_name from tbl_counties as c INNER join tbl_towns as t on c.Cos_id = t.Cos_id;";
-$result = mysqli_query($link, $sql);
-
-$cosTwnname =array();
-while($row = mysqli_fetch_assoc($result)){
-    $rows = $row["Cos_name"].$row["twn_name"];
-    array_push($cosTwnname,$rows);
-}
-
-
-          <?php $time ="";
-          $ForecastStartTime = strtotime(substr_replace (date("Y-m-d H:i:s",strtotime("+1 day")+ 3600 * 8),"00:00:00", 11));
-          $ForecastEndTime = strtotime(substr_replace (date("Y-m-d H:i:s",strtotime("+3 day")+ 3600 * 8),"00:00:00", 11));
-          while ($row = mysqli_fetch_assoc($result)){
-          if(strtotime($row["startTime"]) >= $ForecastStartTime && strtotime($row["startTime"]) < $ForecastEndTime){
-            $weekday = get_chinese_weekday($row["startTime"]);
-            $startTime = substr($row["startTime"],11,14);
-            $endTime = substr($row["endTime"],11,14);
-            $date = strtr(substr($row["startTime"],5,5),"-","/").'<br/><h6 >'."$weekday".'</h6>'."{$startTime}<br/>".'~<br/>'."{$endTime}";
-            $time = $time.'<th scope="col">'."{$date}".'</th>';
-          }
-       }
-       echo $time;
-       mysqli_data_seek($result,0);
-       exit();
-      ?>
-
-
-
-
-  $townList = file_get_contents("./selCounty.php?county={$_POST["selCounties"]}");
-  echo"$townList"."22";
-  $curl_handle=curl_init();
-  curl_setopt($ch, CURLOPT_URL,"selCounty.php");
-  curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-  curl_setopt($ch, CURLOPT_HEADER, 0);
-  curl_setopt($get, CURLOPT_FOLLOWLOCATION, true);
-  curl_setopt($ch, CURLOPT_POSTFIELDS, "county={$_POST["selCounties"]}");
-  $query = curl_exec($ch);
-  curl_close($ch);
-  echo "$query";
-
-
-
 
 

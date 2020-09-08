@@ -41,6 +41,7 @@ if (isset($_POST["selTown"])) {
   $result = mysqli_query($link, $sqlStatement);
 }
 
+$_SESSION["twnid"] = $_POST["selTown"];
 
 ?>
 
@@ -55,8 +56,6 @@ if (isset($_POST["selTown"])) {
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <title>個人氣象站</title>
 
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
-    integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
   <link rel="stylesheet" href="\PID_Assignment\css\bootstrap.min.css">
   <link rel="stylesheet" href="\PID_Assignment\css\store_index.css">
@@ -145,13 +144,13 @@ if (isset($_POST["selTown"])) {
           <?php while ($row = mysqli_fetch_assoc($result)){?>
           <tr style="text-align: center;">
             <td scope="col"><?=$row["location_name"] ?></td>
-            <td scope="col"><?=$row["ELEV"] ?></td>
-            <td scope="col"><?=$row["TEMP"] ?></td>
-            <td scope="col"><?=$row["HUMD"] ?></td>
-            <td scope="col"><?=$row["WDIR"] ?></td>
-            <td scope="col"><?=$row["WDSD"] ?></td>
-            <td scope="col"><?=$row["D_TX"] ?></td>
-            <td scope="col"><?=$row["D_TN"] ?></td>
+            <td scope="col"><?=isdatanull($row["ELEV"])?></td>
+            <td scope="col"><?=isdatanull($row["TEMP"]) ?></td>
+            <td scope="col"><?=isdatanull($row["HUMD"]) ?></td>
+            <td scope="col"><?=isdatanull($row["WDIR"]) ?></td>
+            <td scope="col"><?=isdatanull($row["WDSD"]) ?></td>
+            <td scope="col"><?=isdatanull($row["D_TX"]) ?></td>
+            <td scope="col"><?=isdatanull($row["D_TN"]) ?></td>
             </tr>
           <?php } ?>
       </tbody>
@@ -185,5 +184,11 @@ function townListBack(data) {
 }
 
 </script>
+
+<?php if (isset($_POST["selCounties"])) {  
+  echo "<script type='text/javascript'>
+            countySelect();
+        </script>";
+} ?>
 
 </html>
